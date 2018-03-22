@@ -4,6 +4,23 @@ import pytest
 
 
 @pytest.fixture
+def line_n(request):
+    size = request.node.get_marker(
+        'line_size').args[0]
+    line = sk.Line(size)
+    return line
+
+
+@pytest.fixture
+def BenchN(request):
+    _size = request.node.get_marker(
+        'bench_size').args[0]
+    class BSize(sk._Bench):
+        size = _size
+    return BSize
+        
+
+@pytest.fixture
 def line_5():
     line = sk.Line(5)
     return line
@@ -12,6 +29,19 @@ def line_5():
 def quad_10():
     lift = sk.Lift(10, sk.Quad)
     return lift
+
+@pytest.mark.bench_size(6)
+def test_bench6(line_5, BenchN):
+    lift = sk.Lift(10, BenchN)
+    res = lift.one_bench(line_5)
+    assert res == {'loaded': 5, 'num_benches': 1, 'unloaded': 0}
+
+@pytest.mark.line_size(6)
+def test_line6(line_n):
+    res = line_n.take(7)
+    assert res == 6
+    
+
 
 def test_line_take(line_5):
     res = line_5.take(7)
